@@ -3,3 +3,4 @@
 /server.crt
 /.cache
 /node_modules
+/dist
