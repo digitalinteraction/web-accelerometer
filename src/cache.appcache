@@ -1,0 +1,28 @@
+CACHE MANIFEST
+
+# Cache (entries were prefixed with '/')
+CACHE:
+/manifest.webmanifest
+/icon64.png
+/icon96.png
+/icon48.png
+/icon100.png
+/icon128.png
+#/icon.ico
+# Referencing page is implicitly cached
+#/
+#/index.html
+
+# Access everything else from network if available
+NETWORK:
+*
+
+# Fallback content
+FALLBACK:
+#/ fallback.html
+
+# prefer-online fast
+SETTINGS:
+prefer-online
+
+# Timestamp inserted to ensure manifest changes when distribution changes: 

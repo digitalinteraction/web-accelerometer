@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; }
+    </style>
+    <title>Test</title>
+</head>
+<body>
+  <h1>Test</h1>
+  <div><input type="button" id="go" value="Start"></div>
+</body>
+<script>
+function download(filename, data) {
+    const anchorElement = document.createElement('A');
+    if (data instanceof ArrayBuffer) {
+        data = [data];
+    }
+    if (Array.isArray(data)) {
+        data = new Blob(data, { type:'application/octet-binary' });
+    }
+    let url;
+    if (data instanceof Blob) {
+        url = URL.createObjectURL(data);
+    } else {  // string
+        url = 'data:text/plain;charset=utf-8,' + encodeURIComponent(data);
+    }
+    anchorElement.setAttribute('href', url);
+    anchorElement.setAttribute('download', filename);
+    anchorElement.style.display = 'none';
+    document.body.appendChild(anchorElement);
+    anchorElement.click();
+    document.body.removeChild(anchorElement);
+}
+
+const frequency = 50;
+let accelerometer = null;
+let accelStarted = false;
+let logger = [];
+
+function accelData(e) {
+    const time = Date.now();
+    const line = `${time},${accelerometer.x},${accelerometer.y},${accelerometer.z}`;
+    logger.push(line);
+    console.log(line);
+}
+
+async function accelStart() {
+    if (!accelerometer) {
+        console.log('PERMISSION: Asking...');
+        const permissionResult = await navigator.permissions.query({name:'accelerometer'});
+        if (permissionResult.state === 'granted') {
+            console.log('PERMISSION: Granted');
+            accelerometer = new Accelerometer({frequency});
+            accelerometer.addEventListener('reading', accelData);
+        } else if (permissionResult.state === 'prompt') {
+            console.log('PERMISSION: Prompt');
+        } else {
+            console.log('PERMISSION: Unexpected state: ' + permissionResult.state);
+        }
+    }
+    if (accelerometer) {
+        logger = [];
+        accelerometer.start();
+        accelStarted = true;
+        document.querySelector('#go').value = 'Stop';
+    }
+}
+
+function accelStop() {
+    accelerometer.stop();
+    if (logger.length > 0) {
+        const now = (new Date()).toISOString().replace(/[^0-9]/g, '');
+        download(`accel-${now}.csv`, logger.join('\r\n'));
+        logger = [];
+    }
+    accelStarted = false;
+    document.querySelector('#go').value = 'Start';
+}
+
+window.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelector('#go').addEventListener('click', () => {
+        if (!accelStarted) {
+            accelStart();
+        } else {
+            accelStop();
+        }
+    });
+});
+
+</script>
+</html>
